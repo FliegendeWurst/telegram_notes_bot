@@ -1,0 +1,14 @@
+[package]
+name = "telegram_notes_bot"
+version = "0.1.0"
+authors = ["FliegendeWurst <2012gdwu@web.de>"]
+edition = "2018"
+
+[dependencies]
+futures-preview = "=0.3.0-alpha.18"
+tokio = "0.2.0-alpha.2"
+telegram-bot = { git = "https://github.com/telegram-rs/telegram-bot" }
+reqwest = { git = "https://github.com/seanmonstar/reqwest" }
+maplit = "1.0.2"
+chrono = "0.4.9"
+url = "2.1.0"
