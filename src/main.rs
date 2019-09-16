@@ -30,6 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.json(&hashmap!{ "username" => &trilium_user, "password" => &trilium_password })
 		.send().await.unwrap().json().await.unwrap();
 	let trilium_token = &resp["token"];
+	println!("Acquired token: {}", trilium_token);
 
 	println!("Init done!");
 
