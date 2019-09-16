@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 				continue;
 			}
 			if let MessageKind::Text { ref data, .. } = message.kind {
-				let is_url = Url::parse(&data).is_ok();
+				let is_url = false; //Url::parse(&data).is_ok(); // TODO: read this data from the Telegram json data (utf16 idxes..)
 				let formatted_text = if is_url {
 					format!("<ul><li><a href=\"{}\">{}</a></li></ul>", data, data)
 				} else {
