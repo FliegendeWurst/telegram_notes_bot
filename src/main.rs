@@ -314,7 +314,7 @@ struct Attribute {
 	deleteId: Option<serde_json::Value>,
 	hash: String,
 	isInheritable: bool,
-	isOwned: bool,
+	//isOwned: bool, // removed in 0.42.2
 }
 
 #[derive(Error, Debug)]
