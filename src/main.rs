@@ -1,6 +1,7 @@
 use chrono::prelude::*;
 use futures_util::stream::StreamExt;
 use maplit::hashmap;
+use mime::Mime;
 use once_cell::sync::Lazy;
 use reqwest::Client;
 use serde_derive::Deserialize;
@@ -16,10 +17,15 @@ use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
+mod ical_parsing;
+
+static TELEGRAM_BOT_TOKEN: Lazy<String> = Lazy::new(|| {
+	env::var("TELEGRAM_BOT_TOKEN").expect("TELEGRAM_BOT_TOKEN not set")
+});
+
 static API: Lazy<Arc<Api>> = Lazy::new(|| {
-	let telegram_token = env::var("TELEGRAM_BOT_TOKEN").expect("TELEGRAM_BOT_TOKEN not set");
 	println!("Initializing Telegram API..");
-	Arc::new(Api::new(telegram_token))
+	Arc::new(Api::new(&*TELEGRAM_BOT_TOKEN))
 });
 
 static TRILIUM_TOKEN: Lazy<String> = Lazy::new(|| {
@@ -121,6 +127,24 @@ async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text
 				API.send(message.text_reply("URL saved :-)")).await?;
 			} else {
 				API.send(message.text_reply("Text saved :-)")).await?;
+			}
+		} else if let MessageKind::Document { ref data, ref caption, .. } = message.kind {
+			let document = data;
+			send_message(format!("Document {:?} {:?} {:?} {:?}", caption, document.file_id, document.file_name, document.mime_type)).await?;
+			let get_file = GetFile::new(&document);
+			let file = API.send(get_file).await?;
+			let url = file.get_url(&TELEGRAM_BOT_TOKEN).ok_or_else(|| error("url is none"))?;
+			let data = CLIENT.get(&url).send().await?.bytes().await?;
+			let mime: Mime = document.mime_type.as_ref().ok_or_else(|| error("no mime type"))?.parse()?;
+			match (mime.type_(), mime.subtype()) {
+				(mime::TEXT, x) if x == "calendar" => {
+					let text = String::from_utf8_lossy(&data);
+					let text = text.replace("\n<", "<"); // newlines in HTML values
+					send_message(&text).await?;
+					let calendar = ical_parsing::parse_calendar(&text)?;
+					send_message(format!("{:?}", calendar)).await?;
+				},
+				_ => {}
 			}
 		}
 	} else if let UpdateKind::CallbackQuery(cb) = update.kind {
@@ -278,6 +302,11 @@ async fn notify_owner_impl(time_left: &str, task: Task) -> Result<(), Error> {
 	Ok(())
 }
 
+async fn send_message<S: Into<String>>(msg: S) -> Result<(), Error> {
+	API.send(SendMessage::new(*OWNER, msg.into())).await?;
+	Ok(())
+}
+
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
 struct Task {
@@ -323,4 +352,14 @@ pub enum Error {
 	Network(#[from] reqwest::Error),
 	#[error("telegram error: {0}")]
 	Telegram(#[from] telegram_bot::Error),
+	#[error("mime parsing error: {0}")]
+	Mime(#[from] mime::FromStrError),
+	#[error("ical parsing error: {0}")]
+	Ical(#[from] ical_parsing::Error),
+	#[error("internal error: {0}")]
+	CustomMessage(String),
+}
+
+fn error<S: Into<String>>(msg: S) -> Error {
+	Error::CustomMessage(msg.into())
 }
