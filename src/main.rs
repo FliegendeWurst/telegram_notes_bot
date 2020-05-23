@@ -64,6 +64,10 @@ async fn main() -> Result<(), Error> {
 		start_polling().await;
 	});
 
+	task::spawn(async move {
+		event_alerts().await;
+	});
+
 	let mut reminder_msg = MessageId::new(1);
 	let mut reminder_text = String::new();
 	let mut reminder_start = Local::now();
@@ -237,6 +241,49 @@ async fn create_text_note(client: &Client, trilium_token: &str, title: &str, con
 // image note:
 // curl 'http://localhost:9001/api/clipper/clippings' -H 'Accept: */*' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Authorization: icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns=' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' --data $'{"title":"trilium/clipper.js at master \xb7 zadam/trilium","content":"<img src=\\"BoCpsLz9je8a01MdGbj4\\">","images":[{"imageId":"BoCpsLz9je8a01MdGbj4","src":"inline.png","dataUrl":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAESCAYAAAChJCPsAAAgAElEQV"}]}'
 
+async fn event_alerts() {
+	loop {
+		let last_min = Local::now().minute();
+		if let Err(e) = event_alerts_soon().await {
+			println!("error: {}", e);
+		}
+		while Local::now().minute() == last_min {
+			tokio::time::delay_for(Duration::from_secs(1)).await;
+		}
+		tokio::time::delay_for(Duration::from_secs(16)).await;
+	}
+}
+
+async fn event_alerts_soon() -> Result<(), Error> {
+	let now = Local::now();
+
+	let events: Vec<Event> = CLIENT.get("http://localhost:9001/custom/event_alerts").send().await?.json().await?;
+	for event in events {
+		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local, &NaiveDateTime::parse_from_str(&event.start_time, "%Y-%m-%dT%H:%M:%S")?).unwrap();
+		if todo_time <= now {
+			continue;
+		}
+		let diff = todo_time - now;
+		let minutes = diff.num_minutes();
+		if minutes == 7 * 24 * 60 || minutes == 48 * 60 || minutes == 24 * 60 || minutes == 60 || minutes == 10 {
+			event_alert_notify(&format_time(diff), event).await?;
+		}
+	}
+	Ok(())
+}
+
+async fn event_alert_notify(time_left: &str, event: Event) -> Result<(), Error> {
+	API.send(SendMessage::new(*OWNER, format!("{}: {}", time_left, event.name))).await?;
+	Ok(())
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Event {
+	name: String,
+	start_time: String,
+}
+
 async fn start_polling() {
 	loop {
 		let last_min = Local::now().minute();
@@ -371,6 +418,8 @@ pub enum Error {
 	Telegram(#[from] telegram_bot::Error),
 	#[error("mime parsing error: {0}")]
 	Mime(#[from] mime::FromStrError),
+	#[error("chrono parsing error: {0}")]
+	Chrono(#[from] chrono::format::ParseError),
 	#[error("ical parsing error: {0}")]
 	Ical(#[from] ical_parsing::Error),
 	#[error("internal error: {0}")]
