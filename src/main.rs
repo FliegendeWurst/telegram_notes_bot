@@ -130,7 +130,6 @@ async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text
 			}
 		} else if let MessageKind::Document { ref data, ref caption, .. } = message.kind {
 			let document = data;
-			send_message(format!("Document {:?} {:?} {:?} {:?}", caption, document.file_id, document.file_name, document.mime_type)).await?;
 			let get_file = GetFile::new(&document);
 			let file = API.send(get_file).await?;
 			let url = file.get_url(&TELEGRAM_BOT_TOKEN).ok_or_else(|| error("url is none"))?;
@@ -140,11 +139,29 @@ async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text
 				(mime::TEXT, x) if x == "calendar" => {
 					let text = String::from_utf8_lossy(&data);
 					let text = text.replace("\n<", "<"); // newlines in HTML values
-					send_message(&text).await?;
+					//send_message(&text).await?;
 					let calendar = ical_parsing::parse_calendar(&text)?;
-					send_message(format!("{:?}", calendar)).await?;
+					//send_message(format!("{:?}", calendar)).await?;
+					if calendar.events.len() != 1 {
+						return Ok(());
+					}
+					if CLIENT.get("http://localhost:9001/custom/new_event").form(&json!({
+						"name": calendar.events[0].summary,
+						"summary": calendar.events[0].description_html.as_deref().unwrap_or(&calendar.events[0].description),
+						"fileName": document.file_name,
+						"fileData": text,
+						"location": calendar.events[0].location,
+						"startTime": calendar.events[0].start.format("%Y-%m-%dT%H:%M:%S").to_string(),
+						"endTime": calendar.events[0].end.format("%Y-%m-%dT%H:%M:%S").to_string(),
+					})).send().await?.status().is_success() {
+						send_message("Event saved :-)").await?;
+					} else {
+						send_message("error saving event").await?;
+					}
 				},
-				_ => {}
+				_ => {
+					send_message(format!("Document {:?} {:?} {:?} {:?}", caption, document.file_id, document.file_name, document.mime_type)).await?;
+				}
 			}
 		}
 	} else if let UpdateKind::CallbackQuery(cb) = update.kind {
@@ -178,7 +195,7 @@ async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text
 				CLIENT.get("http://localhost:9001/custom/new_reminder").form(&json!({
 					"time": remind_time.to_rfc3339(),
 					"task": *reminder_text
-				})).send().await?.text().await?;
+				})).send().await?;
 				API.send(SendMessage::new(*OWNER, "Reminder saved :-)")).await?;
 				*reminder_text = String::new();
 			},

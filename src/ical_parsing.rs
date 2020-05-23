@@ -14,6 +14,8 @@ pub struct Event {
 	pub uid: String,
 	pub summary: String,
 	pub description: String,
+	/// X-ALT-DESC;FMTTYPE=text/html
+	pub description_html: Option<String>,
 	pub start: NaiveDateTime,
 	pub end: NaiveDateTime,
 	pub duration: Option<Duration>,
@@ -43,6 +45,7 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 	let mut uid = None;
 	let mut summary = None;
 	let mut description = None;
+	let mut description_html = None;
 	let mut start = None;
 	let mut end = None;
 	let mut duration = None;
@@ -59,6 +62,14 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 			"DTEND" => end = Some(process_dt(&value)?),
 			"DURATION" => duration = Some(process_duration(&value)?),
 			"RRULE" => { /* TODO: periodic */ },
+			"X-ALT-DESC" => {
+				if prop.params.as_ref()
+					.map(|x| x.iter()
+						.any(|(key, values)| key == "FMTTYPE" && values.first().map(|x| &**x) == Some("text/html"))
+					).unwrap_or(false) {
+					description_html = Some(value);
+				}
+			}
 			_ => (),
 		};
 	}
@@ -68,7 +79,8 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 	Ok(Event {
 		uid: uid.unwrap_or_default(),
 		summary: summary.unwrap_or_default(),
-	    description: description.unwrap_or_default(),
+		description: description.unwrap_or_default(),
+		description_html,
 	    start: start,
 		end: end,
 		duration,
