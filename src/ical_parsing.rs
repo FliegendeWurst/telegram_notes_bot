@@ -81,10 +81,10 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 		summary: summary.unwrap_or_default(),
 		description: description.unwrap_or_default(),
 		description_html,
-	    start: start,
-		end: end,
+		start,
+		end,
 		duration,
-	    location: location.unwrap_or_default(), 
+		location: location.unwrap_or_default(),
 	})
 }
 
@@ -106,7 +106,7 @@ fn process_dt(value: &str) -> Result<NaiveDateTime, Error> {
 
 fn process_duration(_value: &str) -> Result<Duration, Error> {
 	// TODO
-	return Err(Error::Data("duration parsing not implemented"));
+	Err(Error::Data("duration parsing not implemented"))
 }
 
 #[derive(Error, Debug)]

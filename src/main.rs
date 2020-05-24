@@ -48,9 +48,9 @@ static CLIENT: Lazy<Client> = Lazy::new(Client::new);
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-	&*OWNER;
+	Lazy::force(&OWNER);
 
-	&*API;
+	Lazy::force(&API);
 
 	println!("Initializing Trilium API..");
 	// Trilium login:
