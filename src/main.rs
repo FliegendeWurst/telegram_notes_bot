@@ -150,6 +150,7 @@ async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text
 						return Ok(());
 					}
 					if CLIENT.get("http://localhost:9001/custom/new_event").form(&json!({
+						"uid": calendar.events[0].uid,
 						"name": calendar.events[0].summary,
 						"summary": calendar.events[0].description_html.as_deref().unwrap_or(&calendar.events[0].description),
 						"fileName": document.file_name,
