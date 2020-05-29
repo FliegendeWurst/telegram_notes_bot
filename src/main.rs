@@ -201,7 +201,7 @@ async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text
 					"time": remind_time.to_rfc3339(),
 					"task": *reminder_text
 				})).send().await?;
-				API.send(SendMessage::new(*OWNER, "Reminder saved :-)")).await?;
+				API.send(SendMessage::new(*OWNER, format!("Reminder scheduled for {} :-)", remind_time.format("%Y-%m-%d %H:%M")))).await?;
 				*reminder_text = String::new();
 			},
 			_ => {}
