@@ -44,7 +44,9 @@ static OWNER: Lazy<UserId> = Lazy::new(|| {
 	UserId::new(env::var("TELEGRAM_USER_ID").expect("TELEGRAM_USER_ID not set").parse().expect("TELEGRAM_USER_ID not numeric"))
 });
 
-static CLIENT: Lazy<Client> = Lazy::new(Client::new);
+static CLIENT: Lazy<Client> = Lazy::new(|| {
+	Client::builder().http1_title_case_headers().build().unwrap()
+});
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -229,11 +231,13 @@ async fn create_text_note(client: &Client, trilium_token: &str, title: &str, con
 	// curl 'http://localhost:9001/api/clipper/notes'
 	//  -H 'Accept: */*' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json'
 	//  -H 'Authorization: icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns='
+	//  -H 'trilium-local-now-datetime: 2020-05-29 __:__:__.xxx+__:__'
 	//  -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f'
 	//  --data '{"title":"line 1","content":"<p>line 2</p><p>line 3</p>","clipType":"note"}'
-
+	let now = Local::now();
 	client.post("http://localhost:9001/api/clipper/notes")
 		.header("Authorization", trilium_token)
+		.header("trilium-local-now-datetime", now.format("%Y-%m-%d %H:%M:%S%.3f%:z").to_string())
 		.json(&hashmap!{ "title" => title, "content" => content, "clipType" => "note" })
 		.send().await?;
 	Ok(())
