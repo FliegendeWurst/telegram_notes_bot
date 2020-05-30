@@ -1,105 +1,77 @@
 use chrono::prelude::*;
 use futures_util::stream::StreamExt;
-use maplit::hashmap;
 use mime::Mime;
 use once_cell::sync::Lazy;
 use reqwest::Client;
 use serde_derive::Deserialize;
 use serde_json::json;
-use telegram_bot::*;
-use telegram_bot::types::{EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, SendMessage};
-use thiserror::Error;
+use telegram_bot::{MessageId, types::{EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, SendMessage}, Update, UpdateKind, MessageKind, CanReplySendMessage, GetFile};
+use telegram_bot::types::refs::ToMessageId;
 use tokio::task;
 use url::Url;
 
-use std::collections::HashMap;
-use std::env;
-use std::sync::Arc;
 use std::time::Duration;
 
-mod ical_parsing;
-
-static TELEGRAM_BOT_TOKEN: Lazy<String> = Lazy::new(|| {
-	env::var("TELEGRAM_BOT_TOKEN").expect("TELEGRAM_BOT_TOKEN not set")
-});
-
-static API: Lazy<Arc<Api>> = Lazy::new(|| {
-	println!("Initializing Telegram API..");
-	Arc::new(Api::new(&*TELEGRAM_BOT_TOKEN))
-});
-
-static TRILIUM_TOKEN: Lazy<String> = Lazy::new(|| {
-	println!("Loading passwords..");
-	let trilium_user = env::var("TRILIUM_USER").expect("TRILIUM_USER not set");
-	let trilium_password = env::var("TRILIUM_PASSWORD").expect("TRILIUM_PASSWORD not set");
-	let client = reqwest::blocking::Client::new();
-	let resp: HashMap<String, String> = client.post("http://localhost:9001/api/login/token")
-		.json(&hashmap!{ "username" => &trilium_user, "password" => &trilium_password })
-		.send().unwrap().json().unwrap();
-	resp["token"].clone()
-});
-
-static OWNER: Lazy<UserId> = Lazy::new(|| {
-	println!("Loading configuration..");
-	UserId::new(env::var("TELEGRAM_USER_ID").expect("TELEGRAM_USER_ID not set").parse().expect("TELEGRAM_USER_ID not numeric"))
-});
-
-static CLIENT: Lazy<Client> = Lazy::new(|| {
-	Client::builder().http1_title_case_headers().build().unwrap()
-});
+use telegram_notes_bot::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
 	Lazy::force(&OWNER);
-
 	Lazy::force(&API);
-
-	println!("Initializing Trilium API..");
-	// Trilium login:
-	// curl 'http://localhost:9001/api/login/token' -H 'User-Agent: Mozilla/5.0 ..' -H 'Accept: application/json' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' -H 'DNT: 1' -H 'Connection: keep-alive' --data '{"username":"username","password":"insert_password_here"}'
-	// -> {"token":"icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns="}
-	println!("Acquired token: {}", *TRILIUM_TOKEN);
-
+	Lazy::force(&TRILIUM_TOKEN);
 	println!("Init done!");
 
-	task::spawn(async move {
-		start_polling().await;
-	});
+	task::spawn(task_alerts());
+	task::spawn(event_alerts());
 
-	task::spawn(async move {
-		event_alerts().await;
-	});
+	let mut context = Context::default();
 
-	let mut reminder_msg = MessageId::new(1);
-	let mut reminder_text = String::new();
-	let mut reminder_start = Local::now();
-	let mut reminder_time = chrono::Duration::minutes(0);
-
-	// Fetch new updates via long poll method
 	let mut stream = API.stream();
 	while let Some(update) = stream.next().await {
 		if update.is_err() {
 			println!("Telegram error: {:?}", update.err().unwrap());
 			continue;
 		}
-		let update = update.unwrap();
 
-		if let Err(e) = process_one(update, &mut reminder_msg, &mut reminder_text, &mut reminder_start, &mut reminder_time).await {
+		if let Err(e) = process_one(update.unwrap(), &mut context).await {
 			println!("Error: {}", e);
 		}
 	}
 	Ok(())
 }
 
-async fn process_one(update: Update, reminder_msg: &mut MessageId, reminder_text: &mut String, reminder_start: &mut DateTime<Local>, reminder_time: &mut chrono::Duration) -> Result<(), Error> {
+struct Context {
+	reminder_msg: MessageId,
+	reminder_text: String,
+	reminder_start: DateTime<Local>,
+	reminder_time: chrono::Duration,
+}
+
+impl Default for Context {
+	fn default() -> Self {
+		Context {
+			reminder_msg: MessageId::new(1),
+			reminder_text: String::new(),
+			reminder_start: Local::now(),
+			reminder_time: chrono::Duration::minutes(0),
+		}
+	}
+}
+
+async fn process_one(update: Update, context: &mut Context) -> Result<(), Error> {
+	let reminder_msg = &mut context.reminder_msg;
+	let reminder_text = &mut context.reminder_text;
+	let reminder_start = &mut context.reminder_start;
+	let reminder_time = &mut context.reminder_time;
+
 	if let UpdateKind::Message(message) = update.kind {
 		let now = Local::now();
-
 		println!("[{}-{:02}-{:02} {:02}:{:02}] Receiving msg {:?}", now.year(), now.month(), now.day(), now.hour(), now.minute(), message);
 		if message.from.id != *OWNER {
 			// don't handle message
 			return Ok(());
 		}
+
 		if let MessageKind::Text { ref data, .. } = message.kind {
 			if data == "/remindme" {
 				let mut msg = SendMessage::new(*OWNER, "in 0m: new reminder");
@@ -238,7 +210,7 @@ async fn create_text_note(client: &Client, trilium_token: &str, title: &str, con
 	client.post("http://localhost:9001/api/clipper/notes")
 		.header("Authorization", trilium_token)
 		.header("trilium-local-now-datetime", now.format("%Y-%m-%d %H:%M:%S%.3f%:z").to_string())
-		.json(&hashmap!{ "title" => title, "content" => content, "clipType" => "note" })
+		.json(&json!({ "title": title, "content": content, "clipType": "note" }))
 		.send().await?;
 	Ok(())
 }
@@ -289,10 +261,10 @@ struct Event {
 	start_time: String,
 }
 
-async fn start_polling() {
+async fn task_alerts() {
 	loop {
 		let last_min = Local::now().minute();
-		if let Err(e) = one_req().await {
+		if let Err(e) = task_alerts_soon().await {
 			println!("error: {}", e);
 		}
 		while Local::now().minute() == last_min {
@@ -302,7 +274,7 @@ async fn start_polling() {
 	}
 }
 
-async fn one_req() -> Result<(), Error> {
+async fn task_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
 	//println!("{}", CLIENT.get("http://localhost:9001/custom/task_alerts").send().await?.text().await?);
 
@@ -342,9 +314,9 @@ async fn one_req() -> Result<(), Error> {
 		let diff = todo_time - now;
 		let minutes = diff.num_minutes();
 		if !is_reminder && (minutes == 7 * 24 * 60 || minutes == 48 * 60 || minutes == 24 * 60 || minutes == 60 || minutes == 10) {
-			notify_owner_impl(&format_time(diff), task).await?;
+			notify_owner(&format_time(diff), task).await?;
 		} else if is_reminder && minutes == 0 {
-			notify_owner_impl("⏰", task).await?;
+			notify_owner("⏰", task).await?;
 		}
 	}
 	Ok(())
@@ -366,14 +338,8 @@ fn format_time(diff: chrono::Duration) -> String {
 	}
 }
 
-async fn notify_owner_impl(time_left: &str, task: Task) -> Result<(), Error> {
-	API.send(SendMessage::new(*OWNER, format!("{}: {}", time_left, task.title))).await?;
-	Ok(())
-}
-
-async fn send_message<S: Into<String>>(msg: S) -> Result<(), Error> {
-	API.send(SendMessage::new(*OWNER, msg.into())).await?;
-	Ok(())
+async fn notify_owner(time_left: &str, task: Task) -> Result<(), Error> {
+	send_message(format!("{}: {}", time_left, task.title)).await
 }
 
 #[derive(Deserialize, Debug)]
@@ -413,24 +379,4 @@ struct Attribute {
 	hash: String,
 	isInheritable: bool,
 	//isOwned: bool, // removed in 0.42.2
-}
-
-#[derive(Error, Debug)]
-pub enum Error {
-	#[error("network error: {0}")]
-	Network(#[from] reqwest::Error),
-	#[error("telegram error: {0}")]
-	Telegram(#[from] telegram_bot::Error),
-	#[error("mime parsing error: {0}")]
-	Mime(#[from] mime::FromStrError),
-	#[error("chrono parsing error: {0}")]
-	Chrono(#[from] chrono::format::ParseError),
-	#[error("ical parsing error: {0}")]
-	Ical(#[from] ical_parsing::Error),
-	#[error("internal error: {0}")]
-	CustomMessage(String),
-}
-
-fn error<S: Into<String>>(msg: S) -> Error {
-	Error::CustomMessage(msg.into())
 }
