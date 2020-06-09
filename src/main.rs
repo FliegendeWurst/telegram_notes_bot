@@ -123,7 +123,7 @@ async fn process_one(update: Update, context: &mut Context) -> Result<(), Error>
 					if calendar.events.len() != 1 {
 						return Ok(());
 					}
-					if CLIENT.get("http://localhost:9001/custom/new_event").form(&json!({
+					if CLIENT.get(&trilium_url("/custom/new_event")).form(&json!({
 						"uid": calendar.events[0].uid,
 						"name": calendar.events[0].summary,
 						"summary": calendar.events[0].description_html.as_deref().unwrap_or(&calendar.events[0].description),
@@ -171,7 +171,7 @@ async fn process_one(update: Update, context: &mut Context) -> Result<(), Error>
 			},
 			"save_cb" => {
 				let remind_time = *reminder_start + *reminder_time;
-				CLIENT.get("http://localhost:9001/custom/new_reminder").form(&json!({
+				CLIENT.get(&trilium_url("/custom/new_reminder")).form(&json!({
 					"time": remind_time.to_rfc3339(),
 					"task": *reminder_text
 				})).send().await?;
@@ -200,14 +200,14 @@ fn get_keyboard() -> InlineKeyboardMarkup {
 
 async fn create_text_note(client: &Client, trilium_token: &str, title: &str, content: &str) -> Result<(), Error> {
 	// creating a note:
-	// curl 'http://localhost:9001/api/clipper/notes'
+	// curl /api/clipper/notes
 	//  -H 'Accept: */*' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json'
 	//  -H 'Authorization: icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns='
 	//  -H 'trilium-local-now-datetime: 2020-05-29 __:__:__.xxx+__:__'
 	//  -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f'
 	//  --data '{"title":"line 1","content":"<p>line 2</p><p>line 3</p>","clipType":"note"}'
 	let now = Local::now();
-	client.post("http://localhost:9001/api/clipper/notes")
+	client.post(&trilium_url("/api/clipper/notes"))
 		.header("Authorization", trilium_token)
 		.header("trilium-local-now-datetime", now.format("%Y-%m-%d %H:%M:%S%.3f%:z").to_string())
 		.json(&json!({ "title": title, "content": content, "clipType": "note" }))
@@ -216,7 +216,7 @@ async fn create_text_note(client: &Client, trilium_token: &str, title: &str, con
 }
 
 // image note:
-// curl 'http://localhost:9001/api/clipper/clippings' -H 'Accept: */*' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Authorization: icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns=' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' --data $'{"title":"trilium/clipper.js at master \xb7 zadam/trilium","content":"<img src=\\"BoCpsLz9je8a01MdGbj4\\">","images":[{"imageId":"BoCpsLz9je8a01MdGbj4","src":"inline.png","dataUrl":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAESCAYAAAChJCPsAAAgAElEQV"}]}'
+// curl /api/clipper/clippings -H 'Accept: */*' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Authorization: icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns=' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' --data $'{"title":"trilium/clipper.js at master \xb7 zadam/trilium","content":"<img src=\\"BoCpsLz9je8a01MdGbj4\\">","images":[{"imageId":"BoCpsLz9je8a01MdGbj4","src":"inline.png","dataUrl":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAESCAYAAAChJCPsAAAgAElEQV"}]}'
 
 async fn event_alerts() {
 	loop {
@@ -234,7 +234,7 @@ async fn event_alerts() {
 async fn event_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
 
-	let events: Vec<Event> = CLIENT.get("http://localhost:9001/custom/event_alerts").send().await?.json().await?;
+	let events: Vec<Event> = CLIENT.get(&trilium_url("/custom/event_alerts")).send().await?.json().await?;
 	for event in events {
 		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local, &NaiveDateTime::parse_from_str(&event.start_time, "%Y-%m-%dT%H:%M:%S")?).unwrap();
 		if todo_time <= now {
@@ -276,10 +276,8 @@ async fn task_alerts() {
 
 async fn task_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
-	//println!("{}", CLIENT.get("http://localhost:9001/custom/task_alerts").send().await?.text().await?);
 
-	let tasks: Vec<Task> = CLIENT.get("http://localhost:9001/custom/task_alerts").send().await?.json().await?;
-	//println!("{:?}", tasks);
+	let tasks: Vec<Task> = CLIENT.get(&trilium_url("/custom/task_alerts")).send().await?.json().await?;
 	'task: for task in tasks {
 		let mut todo_date = None;
 		let mut todo_time = None;

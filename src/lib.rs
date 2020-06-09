@@ -20,14 +20,22 @@ pub static API: Lazy<Arc<Api>> = Lazy::new(|| {
 	Arc::new(Api::new(&*TELEGRAM_BOT_TOKEN))
 });
 
+pub static TRILIUM_HOST: Lazy<String> = Lazy::new(|| {
+	env::var("TRILIUM_HOST").expect("TRILIUM_HOST not set")
+});
+
+pub fn trilium_url(path: &str) -> String {
+	format!("http://{}{}", *TRILIUM_HOST, path)
+}
+
 pub static TRILIUM_TOKEN: Lazy<String> = Lazy::new(|| {
 	println!("Initializing Trilium API..");
 	let trilium_user = env::var("TRILIUM_USER").expect("TRILIUM_USER not set");
 	let trilium_password = env::var("TRILIUM_PASSWORD").expect("TRILIUM_PASSWORD not set");
 	let client = reqwest::blocking::Client::new();
-	// curl 'http://localhost:9001/api/login/token' -H 'User-Agent: Mozilla/5.0 ..' -H 'Accept: application/json' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' -H 'DNT: 1' -H 'Connection: keep-alive' --data '{"username":"username","password":"insert_password_here"}'
+	// curl /api/login/token -H 'User-Agent: Mozilla/5.0 ..' -H 'Accept: application/json' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' -H 'DNT: 1' -H 'Connection: keep-alive' --data '{"username":"username","password":"insert_password_here"}'
 	// -> {"token":"icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns="}
-	let resp: HashMap<String, String> = client.post("http://localhost:9001/api/login/token")
+	let resp: HashMap<String, String> = client.post(&trilium_url("/api/login/token"))
 		.json(&json!({ "username": &trilium_user, "password": &trilium_password }))
 		.send().unwrap().json().unwrap();
 	resp["token"].clone()
