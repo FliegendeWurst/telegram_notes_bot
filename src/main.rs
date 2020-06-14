@@ -82,11 +82,23 @@ async fn process_one(update: Update, context: &mut Context) -> Result<(), Error>
 				*reminder_start = Local::now();
 				return Ok(());
 			} else if !reminder_text.is_empty() {
-				*reminder_text = data.to_owned();
-				let mut edit = EditMessageText::new(*OWNER, *reminder_msg, format!("in {}: {}", format_time(*reminder_time), reminder_text));
-				edit.reply_markup(get_keyboard());
-				API.send(edit).await?;
-				return Ok(());
+				if data.starts_with("time ") && data.len() > 5 {
+					let time = parse_time(&data[5..]);
+					match time {
+						Ok(time) => {
+							*reminder_start = time;
+							send_message(format!("got time {}", reminder_start.format("%Y-%m-%d %H:%M"))).await
+						},
+						Err(e) => send_message(format!("{:?}", e)).await,
+					}?;
+					return Ok(());
+				} else {
+					*reminder_text = data.to_owned();
+					let mut edit = EditMessageText::new(*OWNER, *reminder_msg, format!("in {}: {}", format_time(*reminder_time), reminder_text));
+					edit.reply_markup(get_keyboard());
+					API.send(edit).await?;
+					return Ok(());
+				}
 			}
 			let is_url = false; //Url::parse(&data).is_ok(); // TODO: read this data from the Telegram json data (utf16 idxes..)
 			let formatted_text = if is_url {

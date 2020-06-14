@@ -8,6 +8,7 @@ use thiserror::Error;
 use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
+use chrono::{DateTime, Datelike, Timelike, Local};
 
 pub mod ical_parsing;
 
@@ -61,6 +62,8 @@ pub enum Error {
 	Mime(#[from] mime::FromStrError),
 	#[error("chrono parsing error: {0}")]
 	Chrono(#[from] chrono::format::ParseError),
+	#[error("integer parsing error: {0}")]
+	Integer(#[from] std::num::ParseIntError),
 	#[error("ical parsing error: {0}")]
 	Ical(#[from] ical_parsing::Error),
 	#[error("internal error: {0}")]
@@ -74,4 +77,26 @@ pub fn error<S: Into<String>>(msg: S) -> Error {
 pub async fn send_message<S: Into<String>>(msg: S) -> Result<(), Error> {
 	API.send(SendMessage::new(*OWNER, msg.into())).await?;
 	Ok(())
+}
+
+pub fn parse_time<S: AsRef<str>>(s: S) -> Result<DateTime<Local>, Error> {
+	let s = s.as_ref();
+	// YYYY-MM-DD format
+	let parens = s.split('-').collect::<Vec<_>>();
+	if parens.len() == 3 {
+		let year = parens[0].parse()?;
+		let month = parens[1].parse()?;
+		let day = parens[2].parse()?;
+		// TODO: construct this datetime in a more elegant way
+		let dt = Local::now()
+			.with_year(year).unwrap()
+			.with_month(month).unwrap()
+			.with_day(day).unwrap()
+			.with_hour(0).unwrap()
+			.with_minute(0).unwrap()
+			.with_second(0).unwrap();
+		Ok(dt)
+	} else {
+		Err(error("unsupported format"))
+	}
 }
