@@ -1,4 +1,5 @@
 use once_cell::sync::Lazy;
+use regex::Regex;
 use reqwest::Client;
 use serde_json::json;
 use telegram_bot::*;
@@ -79,24 +80,26 @@ pub async fn send_message<S: Into<String>>(msg: S) -> Result<(), Error> {
 	Ok(())
 }
 
+static DATE_TIME_REGEX: Lazy<Regex> = Lazy::new(|| {
+	Regex::new(r"(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(?:[\sT](?P<hour>\d{2}).(?P<minute>\d{2}))?").unwrap()
+});
+
 pub fn parse_time<S: AsRef<str>>(s: S) -> Result<DateTime<Local>, Error> {
 	let s = s.as_ref();
 	// YYYY-MM-DD format
-	let parens = s.split('-').collect::<Vec<_>>();
-	if parens.len() == 3 {
-		let year = parens[0].parse()?;
-		let month = parens[1].parse()?;
-		let day = parens[2].parse()?;
-		// TODO: construct this datetime in a more elegant way
-		let dt = Local::now()
-			.with_year(year).unwrap()
-			.with_month(month).unwrap()
-			.with_day(day).unwrap()
-			.with_hour(0).unwrap()
-			.with_minute(0).unwrap()
-			.with_second(0).unwrap();
-		Ok(dt)
-	} else {
-		Err(error("unsupported format"))
-	}
+	let data = DATE_TIME_REGEX.captures(s).ok_or_else(|| error("regex failed"))?;
+	let year = data.name("year").unwrap().as_str().parse().unwrap();
+	let month = data.name("month").unwrap().as_str().parse().unwrap();
+	let day = data.name("day").unwrap().as_str().parse().unwrap();
+	let hour = data.name("hour").map(|x| x.as_str().parse().unwrap()).unwrap_or(0);
+	let minute = data.name("minute").map(|x| x.as_str().parse().unwrap()).unwrap_or(0);
+	// TODO: construct this datetime in a more elegant way
+	let dt = Local::now()
+		.with_year(year).unwrap()
+		.with_month(month).unwrap()
+		.with_day(day).unwrap()
+		.with_hour(hour).unwrap()
+		.with_minute(minute).unwrap()
+		.with_second(0).unwrap();
+	Ok(dt)
 }
