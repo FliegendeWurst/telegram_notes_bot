@@ -304,6 +304,7 @@ async fn task_alerts_soon() -> Result<(), Error> {
 				"todoTime" => todo_time = Some(attribute.value.as_str().unwrap().to_owned()),
 				"doneDate" => continue 'task,
 				"reminder" => is_reminder = true,
+				"canceled" => if attribute.value.as_str().unwrap() == "true" { continue 'task },
 				_ => {}
 			}
 		}
@@ -356,7 +357,7 @@ async fn notify_owner(time_left: &str, task: Task) -> Result<(), Error> {
 #[allow(non_snake_case)]
 struct Task {
 	attributes: Vec<Attribute>,
-	contentLength: usize,
+	//contentLength: usize,
 	dateCreated: DateTime<FixedOffset>,
 	dateModified: DateTime<FixedOffset>,
 	deleteId: Option<serde_json::Value>,
