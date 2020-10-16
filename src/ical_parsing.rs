@@ -90,7 +90,7 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 
 fn process_dt(value: &str) -> Result<NaiveDateTime, Error> {
 	// 20200626T140000
-	if value.len() != 15 {
+	if value.len() != 15 && value.len() != 16 { // allow Z suffix
 		return Err(Error::Data("invalid dt length"));
 	}
 	// TODO: error handling
