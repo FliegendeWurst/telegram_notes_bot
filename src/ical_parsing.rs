@@ -1,4 +1,6 @@
-use chrono::{Duration, NaiveDateTime, NaiveDate};
+use chrono::{Duration, NaiveDate, NaiveDateTime};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use ical::parser::ical::component::IcalEvent;
 use ical::parser::ical::IcalParser;
 use thiserror::Error;
@@ -75,7 +77,11 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 	}
 	// TODO: don't put defaults here
 	let start = start.ok_or(Error::Data("no dtstart"))?;
-	let end = end.ok_or(Error::Data("no dtend"))?;
+	let end = if end.is_none() && duration.is_some() {
+		start + duration.unwrap()
+	} else {
+		end.ok_or(Error::Data("no dtend"))?
+	};
 	Ok(Event {
 		uid: uid.unwrap_or_default(),
 		summary: summary.unwrap_or_default(),
@@ -104,9 +110,16 @@ fn process_dt(value: &str) -> Result<NaiveDateTime, Error> {
 	Ok(NaiveDate::from_ymd(year, month, day).and_hms(hour, minute, second))
 }
 
-fn process_duration(_value: &str) -> Result<Duration, Error> {
-	// TODO
-	Err(Error::Data("duration parsing not implemented"))
+pub static DURATION_PATTERN: Lazy<Regex> = Lazy::new(|| {
+	Regex::new(r#"PT(\d+)H(\d+)M"#).unwrap()
+});
+
+fn process_duration(value: &str) -> Result<Duration, Error> {
+	if let Some(data) = DURATION_PATTERN.captures(value) {
+		Ok(Duration::minutes(data[1].parse::<i64>().unwrap() * 60 + data[2].parse::<i64>().unwrap()))
+	} else {
+		Err(Error::Data("duration parsing not implemented"))
+	}
 }
 
 #[derive(Error, Debug)]
