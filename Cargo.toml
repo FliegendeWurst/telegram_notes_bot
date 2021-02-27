@@ -6,9 +6,9 @@ license = "GPL-3.0+"
 edition = "2018"
 
 [dependencies]
-tokio = { version =  "0.2.22", features = ["full"] }
-telegram-bot = "0.7.0"
-reqwest = { version = "0.10.4", features = ["json", "blocking"] }
+tokio = { version =  "1.2.0", features = ["full"] }
+telegram-bot = { git = "https://github.com/telegram-rs/telegram-bot", rev = "07a9f9a1c76eaab2259bdc6241691187a46d69d1" }
+reqwest = { version = "0.11.1", features = ["json", "blocking"] }
 chrono = { version = "0.4.11", features = ["serde"] }
 url = "2.1.0"
 futures-util = "0.3.4"

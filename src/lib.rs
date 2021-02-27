@@ -59,6 +59,8 @@ pub enum Error {
 	Network(#[from] reqwest::Error),
 	#[error("telegram error: {0}")]
 	Telegram(#[from] telegram_bot::Error),
+	#[error("json parsing error: {0}")]
+	Json(#[from] serde_json::Error),
 	#[error("mime parsing error: {0}")]
 	Mime(#[from] mime::FromStrError),
 	#[error("chrono parsing error: {0}")]

@@ -237,9 +237,9 @@ async fn event_alerts() {
 			println!("error: {}", e);
 		}
 		while Local::now().minute() == last_min {
-			tokio::time::delay_for(Duration::from_secs(1)).await;
+			tokio::time::sleep(Duration::from_secs(1)).await;
 		}
-		tokio::time::delay_for(Duration::from_secs(16)).await;
+		tokio::time::sleep(Duration::from_secs(16)).await;
 	}
 }
 
@@ -250,7 +250,8 @@ async fn event_alerts_soon() -> Result<(), Error> {
 	let events: Result<Vec<Event>, _> = serde_json::from_str(&text);
 	if events.is_err() {
 		eprintln!("failed to parse {}", text);
-		return events.into();
+		events?;
+		unreachable!() // needed to please the borrow checker
 	}
 	let events = events.unwrap();
 	for event in events {
@@ -286,9 +287,9 @@ async fn task_alerts() {
 			println!("error: {}", e);
 		}
 		while Local::now().minute() == last_min {
-			tokio::time::delay_for(Duration::from_secs(1)).await;
+			tokio::time::sleep(Duration::from_secs(1)).await;
 		}
-		tokio::time::delay_for(Duration::from_secs(1)).await;
+		tokio::time::sleep(Duration::from_secs(1)).await;
 	}
 }
 
@@ -299,7 +300,8 @@ async fn task_alerts_soon() -> Result<(), Error> {
 	let tasks: Result<Vec<Task>, _> = serde_json::from_str(&text);
 	if tasks.is_err() {
 		eprintln!("failed to parse {}", text);
-		return tasks.into();
+		tasks?;
+		unreachable!() // needed to please the borrow checker
 	}
 	let tasks = tasks.unwrap();
 	'task: for task in tasks {
