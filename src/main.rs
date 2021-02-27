@@ -246,7 +246,13 @@ async fn event_alerts() {
 async fn event_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
 
-	let events: Vec<Event> = CLIENT.get(&trilium_url("/custom/event_alerts")).send().await?.json().await?;
+	let text = CLIENT.get(&trilium_url("/custom/event_alerts")).send().await?.text().await?;
+	let events: Result<Vec<Event>, _> = serde_json::from_str(&text);
+	if events.is_err() {
+		eprintln!("failed to parse {}", text);
+		return events.into();
+	}
+	let events = events.unwrap();
 	for event in events {
 		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local, &NaiveDateTime::parse_from_str(&event.start_time, "%Y-%m-%dT%H:%M:%S")?).unwrap();
 		if todo_time <= now {
@@ -289,7 +295,13 @@ async fn task_alerts() {
 async fn task_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
 
-	let tasks: Vec<Task> = CLIENT.get(&trilium_url("/custom/task_alerts")).send().await?.json().await?;
+	let text = CLIENT.get(&trilium_url("/custom/task_alerts")).send().await?.text().await?;
+	let tasks: Result<Vec<Task>, _> = serde_json::from_str(&text);
+	if tasks.is_err() {
+		eprintln!("failed to parse {}", text);
+		return tasks.into();
+	}
+	let tasks = tasks.unwrap();
 	'task: for task in tasks {
 		let mut todo_date = None;
 		let mut todo_time = None;
