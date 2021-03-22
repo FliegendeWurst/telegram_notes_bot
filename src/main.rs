@@ -375,16 +375,16 @@ struct Task {
 	dateCreated: DateTime<FixedOffset>,
 	dateModified: DateTime<FixedOffset>,
 	deleteId: Option<serde_json::Value>,
-	hash: String,
+	// hash: String, // removed in 0.46
 	isContentAvailable: bool,
 	isDeleted: bool,
-	isErased: i64,
+	// isErased: i64, // removed in 0.46
 	isProtected: bool,
 	mime: String,
 	noteId: String,
 	title: String,
 	r#type: String,
-	utcDateCreated: DateTime<Utc>,
+	// utcDateCreated: DateTime<Utc>, // removed in 0.46
 	utcDateModified: DateTime<Utc>,
 }
 
@@ -397,11 +397,11 @@ struct Attribute {
 	name: String,
 	value: serde_json::Value,
 	position: usize,
-	utcDateCreated: DateTime<Utc>,
+	// utcDateCreated: DateTime<Utc>, // removed in 0.46
 	utcDateModified: DateTime<Utc>,
 	isDeleted: bool,
 	deleteId: Option<serde_json::Value>,
-	hash: String,
+	// hash: String, // removed in 0.46
 	isInheritable: bool,
 	//isOwned: bool, // removed in 0.42.2
 }
