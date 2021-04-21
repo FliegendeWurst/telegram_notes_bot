@@ -16,7 +16,6 @@ const {req, res} = api;
 
 const time = new Date(req.body["time"]);
 api.log(time);
-time.addHours(1); // TODO: consider summer time
 const task = req.body["task"];
 
 var hour = time.getHours();
