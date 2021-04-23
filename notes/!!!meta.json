@@ -1,0 +1,511 @@
+{
+	"formatVersion": 1,
+	"appVersion": "0.46.9",
+	"files": [
+		{
+			"isClone": false,
+			"noteId": "vP5DkrdHVvv0",
+			"notePath": [
+				"vP5DkrdHVvv0"
+			],
+			"title": "Implementation",
+			"notePosition": 50,
+			"prefix": null,
+			"isExpanded": 1,
+			"type": "text",
+			"mime": "text/html",
+			"attributes": [],
+			"format": "html",
+			"dirFileName": "Implementation",
+			"children": [
+				{
+					"isClone": false,
+					"noteId": "dDCKmKnFWfrk",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"dDCKmKnFWfrk"
+					],
+					"title": "attribute changed",
+					"notePosition": 0,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=backend",
+					"attributes": [],
+					"dataFileName": "attribute changed.js",
+					"dirFileName": "attribute changed",
+					"children": [
+						{
+							"isClone": false,
+							"noteId": "Xv1GdWl4UvVO",
+							"notePath": [
+								"vP5DkrdHVvv0",
+								"dDCKmKnFWfrk",
+								"Xv1GdWl4UvVO"
+							],
+							"title": "reconcileAssignments",
+							"notePosition": 0,
+							"prefix": null,
+							"isExpanded": 0,
+							"type": "code",
+							"mime": "application/javascript;env=backend",
+							"attributes": [],
+							"dataFileName": "reconcileAssignments.js"
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "1d9ya4XfzQP2",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"1d9ya4XfzQP2"
+					],
+					"title": "button",
+					"notePosition": 10,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=frontend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "run",
+							"value": "frontendStartup",
+							"isInheritable": false,
+							"position": 0
+						}
+					],
+					"dataFileName": "button.js"
+				},
+				{
+					"isClone": false,
+					"noteId": "hvYOnJwamlAm",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"hvYOnJwamlAm"
+					],
+					"title": "CSS",
+					"notePosition": 20,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "text/css",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "appCss",
+							"value": "",
+							"isInheritable": false,
+							"position": 0
+						}
+					],
+					"dataFileName": "CSS.css"
+				},
+				{
+					"isClone": false,
+					"noteId": "wYT6EyWoF0Qg",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"wYT6EyWoF0Qg"
+					],
+					"title": "task template",
+					"notePosition": 30,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "text",
+					"mime": "text/html",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "label:tag",
+							"value": "promoted,multi,text",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "cssClass",
+							"value": "todo",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "label:location",
+							"value": "promoted,single,text",
+							"isInheritable": false,
+							"position": 30
+						},
+						{
+							"type": "label",
+							"name": "label:todoDate",
+							"value": "promoted,single,date",
+							"isInheritable": false,
+							"position": 40
+						},
+						{
+							"type": "label",
+							"name": "label:todoTime",
+							"value": "promoted,single,text",
+							"isInheritable": false,
+							"position": 50
+						},
+						{
+							"type": "label",
+							"name": "label:doneDate",
+							"value": "promoted,single,date",
+							"isInheritable": false,
+							"position": 60
+						},
+						{
+							"type": "label",
+							"name": "label:canceled",
+							"value": "promoted,single,boolean",
+							"isInheritable": false,
+							"position": 70
+						}
+					],
+					"format": "html",
+					"dataFileName": "task template.html"
+				},
+				{
+					"isClone": false,
+					"noteId": "zzJx2J4CLv9y",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"zzJx2J4CLv9y"
+					],
+					"title": "new_reminder handler",
+					"notePosition": 40,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=backend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "customRequestHandler",
+							"value": "new_reminder",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "relation",
+							"name": "targetTemplate",
+							"value": "LBDjD6rGxw6I",
+							"isInheritable": false,
+							"position": 10
+						}
+					],
+					"dataFileName": "new_reminder handler.js"
+				},
+				{
+					"isClone": false,
+					"noteId": "UNuCNmOMROgz",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"UNuCNmOMROgz"
+					],
+					"title": "task_alerts handler",
+					"notePosition": 50,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=backend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "customRequestHandler",
+							"value": "task_alerts",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "relation",
+							"name": "targetTemplate",
+							"value": "wYT6EyWoF0Qg",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "relation",
+							"name": "targetTemplateReminder",
+							"value": "LBDjD6rGxw6I",
+							"isInheritable": false,
+							"position": 30
+						},
+						{
+							"type": "relation",
+							"name": "targetTemplateReminderDaily",
+							"value": "7Wzjk70ySoKm",
+							"isInheritable": false,
+							"position": 40
+						}
+					],
+					"dataFileName": "task_alerts handler.js"
+				},
+				{
+					"isClone": false,
+					"noteId": "LBDjD6rGxw6I",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"LBDjD6rGxw6I"
+					],
+					"title": "reminder template",
+					"notePosition": 60,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "text",
+					"mime": "text/html",
+					"attributes": [
+						{
+							"type": "relation",
+							"name": "template",
+							"value": "wYT6EyWoF0Qg",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "reminder",
+							"value": "true",
+							"isInheritable": true,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "iconClass",
+							"value": "bx bx-alarm",
+							"isInheritable": true,
+							"position": 30
+						},
+						{
+							"type": "label",
+							"name": "cssClass",
+							"value": "reminder",
+							"isInheritable": false,
+							"position": 40
+						}
+					],
+					"format": "html",
+					"dataFileName": "reminder template.html"
+				},
+				{
+					"isClone": false,
+					"noteId": "7Wzjk70ySoKm",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"7Wzjk70ySoKm"
+					],
+					"title": "daily reminder template",
+					"notePosition": 61,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "text",
+					"mime": "text/html",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "iconClass",
+							"value": "bx bx-alarm",
+							"isInheritable": true,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "cssClass",
+							"value": "reminder",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "label:todoTime",
+							"value": "promoted,single,text",
+							"isInheritable": false,
+							"position": 30
+						},
+						{
+							"type": "label",
+							"name": "reminder",
+							"value": "true",
+							"isInheritable": true,
+							"position": 40
+						}
+					],
+					"format": "html",
+					"dataFileName": "daily reminder template.html"
+				},
+				{
+					"isClone": false,
+					"noteId": "XE5kBjusNVkY",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"XE5kBjusNVkY"
+					],
+					"title": "attribute sync button",
+					"notePosition": 80,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=frontend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "run",
+							"value": "frontendStartup",
+							"isInheritable": false,
+							"position": 10
+						}
+					],
+					"dataFileName": "attribute sync button.js",
+					"dirFileName": "attribute sync button",
+					"children": [
+						{
+							"isClone": true,
+							"noteId": "Xv1GdWl4UvVO",
+							"notePath": [
+								"vP5DkrdHVvv0",
+								"XE5kBjusNVkY",
+								"Xv1GdWl4UvVO"
+							],
+							"title": "reconcileAssignments",
+							"prefix": "",
+							"dataFileName": "reconcileAssignments.clone.html",
+							"type": "text",
+							"format": "html"
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "X5pzYZriILAz",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"X5pzYZriILAz"
+					],
+					"title": "event template",
+					"notePosition": 90,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "text",
+					"mime": "text/html",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "label:location",
+							"value": "promoted,single,text",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "label:startTime",
+							"value": "promoted,single,text",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "label:endTime",
+							"value": "promoted,single,text",
+							"isInheritable": false,
+							"position": 30
+						},
+						{
+							"type": "label",
+							"name": "iconClass",
+							"value": "bx bx-calendar-event",
+							"isInheritable": true,
+							"position": 40
+						},
+						{
+							"type": "label",
+							"name": "label:uid",
+							"value": "single,text",
+							"isInheritable": false,
+							"position": 50
+						}
+					],
+					"format": "html",
+					"dataFileName": "event template.html"
+				},
+				{
+					"isClone": false,
+					"noteId": "Qfv3H8TfLqzA",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"Qfv3H8TfLqzA"
+					],
+					"title": "new_event handler",
+					"notePosition": 100,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=backend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "customRequestHandler",
+							"value": "new_event",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "relation",
+							"name": "targetTemplate",
+							"value": "X5pzYZriILAz",
+							"isInheritable": false,
+							"position": 20
+						}
+					],
+					"dataFileName": "new_event handler.js"
+				},
+				{
+					"isClone": false,
+					"noteId": "rvu9Tix6GYYx",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"rvu9Tix6GYYx"
+					],
+					"title": "event_alerts handler",
+					"notePosition": 110,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=backend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "customRequestHandler",
+							"value": "event_alerts",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "relation",
+							"name": "targetTemplateEvent",
+							"value": "X5pzYZriILAz",
+							"isInheritable": false,
+							"position": 10
+						}
+					],
+					"dataFileName": "event_alerts handler.js"
+				}
+			]
+		},
+		{
+			"noImport": true,
+			"dataFileName": "navigation.html"
+		},
+		{
+			"noImport": true,
+			"dataFileName": "index.html"
+		},
+		{
+			"noImport": true,
+			"dataFileName": "style.css"
+		}
+	]
+}

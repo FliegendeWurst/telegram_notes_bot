@@ -1,11 +1,3 @@
-// Create as JS Backend note and add these attributes:
-// ~targetTemplateEvent=@event template (this note is described below)
-// #customRequestHandler=event_alerts
-// Create another note (event template) with this promoted attributes:
-// startTime
-// Optionally add:
-// endTime, location
-
 const {req, res} = api;
 
 const targetTemplate = await api.currentNote.getRelationValue("targetTemplateEvent");

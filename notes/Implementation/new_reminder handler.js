@@ -1,12 +1,3 @@
-// Create as JS Backend note with these attributes:
-// ~targetTemplate=@reminder template
-// #customRequestHandler=new_reminder
-// Create a new note (reminder template) with these promoted attributes:
-// todoDate: date
-// todoTime: text
-// doneDate: date
-// reminder = true
-
 Date.prototype.addHours = function(h) {
     this.setTime(this.getTime() + (h*60*60*1000));
     return this;
@@ -46,6 +37,8 @@ if (day < 10) {
 const todayDateStr = year + "-" + month + "-" + day;
 const todayNote = await api.getDateNote(todayDateStr);
 
+//const templateNoteId = 'LBDjD6rGxw6I';
+//const templateNote = await api.getNote('LBDjD6rGxw6I');
 const targetTemplate = await api.currentNote.getAttributeValue('relation', 'targetTemplate');
 const resp = await api.createNote(
     todayNote.noteId,
