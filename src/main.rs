@@ -1,5 +1,6 @@
 use chrono::prelude::*;
 use futures_util::stream::StreamExt;
+use log::debug;
 use mime::Mime;
 use once_cell::sync::Lazy;
 use reqwest::Client;
@@ -8,7 +9,6 @@ use serde_json::json;
 use telegram_bot::{MessageId, types::{EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, SendMessage}, Update, UpdateKind, MessageKind, CanReplySendMessage, GetFile};
 use telegram_bot::types::refs::ToMessageId;
 use tokio::task;
-use url::Url;
 
 use std::time::Duration;
 
@@ -16,6 +16,7 @@ use telegram_notes_bot::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+	env_logger::init();
 	Lazy::force(&OWNER);
 	Lazy::force(&API);
 	Lazy::force(&TRILIUM_TOKEN);
@@ -247,6 +248,7 @@ async fn event_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
 
 	let text = CLIENT.get(&trilium_url("/custom/event_alerts")).send().await?.text().await?;
+	debug!("event_alerts response {}", text);
 	let events: Result<Vec<Event>, _> = serde_json::from_str(&text);
 	if events.is_err() {
 		eprintln!("failed to parse {}", text);
@@ -254,6 +256,7 @@ async fn event_alerts_soon() -> Result<(), Error> {
 		unreachable!() // needed to please the borrow checker
 	}
 	let events = events.unwrap();
+	debug!("events_alerts: {} objects", events.len());
 	for event in events {
 		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local, &NaiveDateTime::parse_from_str(&event.start_time, "%Y-%m-%dT%H:%M:%S")?).unwrap();
 		if todo_time <= now {
@@ -297,6 +300,7 @@ async fn task_alerts_soon() -> Result<(), Error> {
 	let now = Local::now();
 
 	let text = CLIENT.get(&trilium_url("/custom/task_alerts")).send().await?.text().await?;
+	debug!("task_alerts response {}", text);
 	let tasks: Result<Vec<Task>, _> = serde_json::from_str(&text);
 	if tasks.is_err() {
 		eprintln!("failed to parse {}", text);
@@ -304,6 +308,7 @@ async fn task_alerts_soon() -> Result<(), Error> {
 		unreachable!() // needed to please the borrow checker
 	}
 	let tasks = tasks.unwrap();
+	debug!("task_alerts: {} objects", tasks.len());
 	'task: for task in tasks {
 		let mut todo_date = None;
 		let mut todo_time = None;
