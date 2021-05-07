@@ -7,6 +7,7 @@ const {req, res} = api;
 const uid = req.body["uid"];
 const name = req.body["name"];
 const summary = req.body["summary"];
+const summaryHtml = req.body["summaryHtml"];
 const location = req.body["location"];
 const fileName = req.body["fileName"];
 const fileData = req.body["fileData"];
@@ -31,8 +32,9 @@ const targetTemplate = await api.currentNote.getRelationValue('targetTemplate');
 const options = {
     "parentNoteId": dayNote.noteId,
     "title": name,
-    "content": summary,
-    "type": "text"
+    "content": summaryHtml != "" ? summaryHtml : summary,
+    "type": "text",
+    "mime": summaryHtml != "" ? "text/html" : "text/plain"
 };
 const resp = await api.createNewNote(options);
 const note = resp.note;

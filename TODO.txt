@@ -1,0 +1,2 @@
+- handle URL fields in ical files
+- handle escape codes in ical files

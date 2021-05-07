@@ -1,6 +1,6 @@
 {
 	"formatVersion": 1,
-	"appVersion": "0.46.9",
+	"appVersion": "0.47.2",
 	"files": [
 		{
 			"isClone": false,
@@ -377,6 +377,30 @@
 							"format": "html"
 						}
 					]
+				},
+				{
+					"isClone": false,
+					"noteId": "Q7KqwQ1693Bj",
+					"notePath": [
+						"vP5DkrdHVvv0",
+						"Q7KqwQ1693Bj"
+					],
+					"title": "duplicate into next week button",
+					"notePosition": 81,
+					"prefix": null,
+					"isExpanded": 0,
+					"type": "code",
+					"mime": "application/javascript;env=frontend",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "run",
+							"value": "frontendStartup",
+							"isInheritable": false,
+							"position": 10
+						}
+					],
+					"dataFileName": "duplicate into next week button.js"
 				},
 				{
 					"isClone": false,
