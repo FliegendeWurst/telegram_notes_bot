@@ -1,4 +1,4 @@
-use chrono::{Duration, NaiveDate, NaiveDateTime};
+use chrono::{Duration, Local, NaiveDate, NaiveDateTime, TimeZone};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use ical::parser::ical::component::IcalEvent;
@@ -94,6 +94,7 @@ fn process_event(event: IcalEvent) -> Result<Event, Error> {
 	})
 }
 
+/// returns local time
 fn process_dt(value: &str) -> Result<NaiveDateTime, Error> {
 	// 20200626T140000
 	if value.len() != 15 && value.len() != 16 { // allow Z suffix
@@ -106,8 +107,13 @@ fn process_dt(value: &str) -> Result<NaiveDateTime, Error> {
 	let hour = value[9..11].parse()?;
 	let minute = value[11..13].parse()?;
 	let second = value[13..15].parse()?;
+	let mut date = NaiveDate::from_ymd(year, month, day).and_hms(hour, minute, second);
+	if value.ends_with('Z') {
+		// get local time
+		date = TimeZone::from_utc_datetime(&Local, &date).naive_local()
+	}
 
-	Ok(NaiveDate::from_ymd(year, month, day).and_hms(hour, minute, second))
+	Ok(date)
 }
 
 pub static DURATION_PATTERN: Lazy<Regex> = Lazy::new(|| {
