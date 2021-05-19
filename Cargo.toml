@@ -1,7 +1,7 @@
 [package]
 name = "telegram_notes_bot"
 version = "0.1.0"
-authors = ["FliegendeWurst <2012gdwu@web.de>"]
+authors = ["FliegendeWurst <2012gdwu@posteo.de>"]
 license = "AGPL-3.0+"
 edition = "2018"
 
@@ -16,7 +16,7 @@ serde = "1.0.106"
 once_cell = "1.3.1"
 thiserror = "1.0.15"
 serde_json = "1.0.51"
-ical = "0.7.0"
+ical = { git = "https://github.com/FliegendeWurst/ical-rs", branch = "master" }
 mime = "0.3.16"
 regex = "1.3.9"
 log = "0.4.14"
