@@ -375,7 +375,7 @@ dependencies = [
 [[package]]
 name = "ical"
 version = "0.6.0"
-source = "git+https://github.com/FliegendeWurst/ical-rs?branch=master#d31e84b6c590c43e694d1bdecabc4cec9ae32084"
+source = "git+https://github.com/Peltoche/ical-rs?rev=040d3fc453e4b0fb0149a2190626a4ed80a3de73#040d3fc453e4b0fb0149a2190626a4ed80a3de73"
 dependencies = [
  "thiserror",
 ]
