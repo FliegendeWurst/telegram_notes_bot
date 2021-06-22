@@ -74,7 +74,10 @@ async fn process_one(update: Update, context: &mut Context) -> Result<(), Error>
 		}
 
 		if let MessageKind::Text { ref data, .. } = message.kind {
-			if data == "/remindme" {
+			if data == "/next" {
+				command_next().await?;
+				return Ok(());
+			} else if data == "/remindme" {
 				let mut msg = SendMessage::new(*OWNER, "in 0m: new reminder");
 				msg.reply_markup(get_keyboard());
 				*reminder_msg = API.send(msg).await?.to_message_id();
@@ -229,6 +232,49 @@ async fn create_text_note(client: &Client, trilium_token: &str, title: &str, con
 	Ok(())
 }
 
+async fn command_next() -> Result<(), Error> {
+	let events = request_event_alerts().await?;
+	let tasks = request_task_alerts().await?;
+	let mut all: Vec<_> = events.into_iter().map(EventOrTask::Event).chain(tasks.into_iter().map(EventOrTask::Task)).collect();
+	all.sort_by_key(|x| x.time());
+	let mut printed = 0;
+	let now = Local::now();
+	let mut buf = String::new();
+	for x in all {
+		let time = x.time();
+		if time < now {
+			continue;
+		}
+		buf += &format!("{} {}\n", time.format("%Y-%m-%d %H:%M").to_string(), x.description());
+		printed += 1;
+		if printed >= 10 {
+			break;
+		}
+	}
+	send_message(buf).await?;
+	Ok(())
+}
+
+enum EventOrTask {
+	Event(UsefulEvent),
+	Task(UsefulTask)
+}
+
+impl EventOrTask {
+	fn time(&self) -> DateTime<Local> {
+		match self {
+    		EventOrTask::Event(e) => e.todo_time,
+    		EventOrTask::Task(t) => t.todo_time,
+		}
+	}
+	fn description(&self) -> &str {
+		match self {
+    		EventOrTask::Event(e) => &e.event.name,
+    		EventOrTask::Task(t) => &t.task.title,
+		}
+	}
+}
+
 // image note:
 // curl /api/clipper/clippings -H 'Accept: */*' -H 'Accept-Language: en' --compressed -H 'Content-Type: application/json' -H 'Authorization: icB3xohFDpkVt7YFpbTflUYC8pucmryVGpb1DFpd6ns=' -H 'Origin: moz-extension://13bc3fd7-5cb0-4d48-b368-76e389fd7c5f' --data $'{"title":"trilium/clipper.js at master \xb7 zadam/trilium","content":"<img src=\\"BoCpsLz9je8a01MdGbj4\\">","images":[{"imageId":"BoCpsLz9je8a01MdGbj4","src":"inline.png","dataUrl":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAESCAYAAAChJCPsAAAgAElEQV"}]}'
 
@@ -245,28 +291,37 @@ async fn event_alerts() {
 	}
 }
 
-async fn event_alerts_soon() -> Result<(), Error> {
-	let now = Local::now();
-
+async fn request_event_alerts() -> Result<Vec<UsefulEvent>, Error> {
 	let text = CLIENT.get(&trilium_url("/custom/event_alerts")).send().await?.text().await?;
 	debug!("event_alerts response {}", text);
 	let events: Result<Vec<Event>, _> = serde_json::from_str(&text);
 	if events.is_err() {
 		eprintln!("failed to parse {}", text);
-		events?;
-		unreachable!() // needed to please the borrow checker
 	}
-	let events = events.unwrap();
+	let events = events.map(|x| x.into_iter().flat_map(|event| {
+		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local,
+			&NaiveDateTime::parse_from_str(&event.start_time, "%Y-%m-%dT%H:%M:%S").ok()?).unwrap();
+		Some(UsefulEvent {
+			event,
+			todo_time
+		})
+	}).collect());
+	Ok(events?)
+}
+
+async fn event_alerts_soon() -> Result<(), Error> {
+	let now = Local::now();
+
+	let events = request_event_alerts().await?;	
 	debug!("events_alerts: {} objects", events.len());
 	for event in events {
-		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local, &NaiveDateTime::parse_from_str(&event.start_time, "%Y-%m-%dT%H:%M:%S")?).unwrap();
-		if todo_time <= now {
+		if event.todo_time <= now {
 			continue;
 		}
-		let diff = todo_time - now;
+		let diff = event.todo_time - now;
 		let minutes = diff.num_minutes();
 		if minutes == 7 * 24 * 60 || minutes == 48 * 60 || minutes == 24 * 60 || minutes == 60 || minutes == 10 {
-			event_alert_notify(&format_time(diff), event).await?;
+			event_alert_notify(&format_time(diff), event.event).await?;
 		}
 	}
 	Ok(())
@@ -284,6 +339,11 @@ struct Event {
 	start_time: String,
 }
 
+struct UsefulEvent {
+	event: Event,
+	todo_time: DateTime<Local>,
+}
+
 async fn task_alerts() {
 	loop {
 		let last_min = Local::now().minute();
@@ -297,24 +357,17 @@ async fn task_alerts() {
 	}
 }
 
-async fn task_alerts_soon() -> Result<(), Error> {
-	let now = Local::now();
-
+async fn request_task_alerts() -> Result<Vec<UsefulTask>, Error> {
 	let text = CLIENT.get(&trilium_url("/custom/task_alerts")).send().await?.text().await?;
 	debug!("task_alerts response {}", text);
 	let tasks: Result<Vec<Task>, _> = serde_json::from_str(&text);
 	if tasks.is_err() {
 		eprintln!("failed to parse {}", text);
-		tasks?;
-		unreachable!() // needed to please the borrow checker
 	}
-	let tasks = tasks.unwrap();
-	debug!("task_alerts: {} objects", tasks.len());
-	'task: for task in tasks {
+	let tasks = tasks.map(|tasks| tasks.into_iter().flat_map(|task| {
 		let mut todo_date = None;
 		let mut todo_time = None;
 		let mut is_reminder = false;
-		//println!("considering {:?} with {:?}", task.title, task.attributes);
 		for attribute in &task.attributes {
 			if attribute.r#type != "label" {
 				continue;
@@ -322,14 +375,14 @@ async fn task_alerts_soon() -> Result<(), Error> {
 			match &*attribute.name {
 				"todoDate" => todo_date = Some(attribute.value.as_str().unwrap().to_owned()),
 				"todoTime" => todo_time = Some(attribute.value.as_str().unwrap().to_owned()),
-				"doneDate" => continue 'task,
+				"doneDate" => return None,
 				"reminder" => is_reminder = true,
-				"canceled" => if attribute.value.as_str().unwrap() == "true" { continue 'task },
+				"canceled" => if attribute.value.as_str().unwrap() == "true" { return None },
 				_ => {}
 			}
 		}
 		if todo_date.is_none() {
-			continue;
+			return None;
 		}
 		let todo_date = todo_date.unwrap();
 		let parts = todo_date.split('-').collect::<Vec<_>>();
@@ -339,15 +392,31 @@ async fn task_alerts_soon() -> Result<(), Error> {
 			(parts.get(0).map(|x| x.parse().unwrap()).unwrap_or(0), parts.get(1).map(|x| x.parse().unwrap()).unwrap_or(0), parts.get(2).map(|x| x.parse().unwrap()).unwrap_or(0))
 		} else { (0, 0, 0) };
 		let todo_time: DateTime<Local> = TimeZone::from_local_datetime(&Local, &NaiveDate::from_ymd(year, month, day).and_hms(hour, minute, second)).unwrap();
-		if todo_time <= now {
+		Some(UsefulTask {
+			task,
+			todo_time,
+			is_reminder
+		})
+		
+	}).collect());
+	Ok(tasks?)
+}
+
+async fn task_alerts_soon() -> Result<(), Error> {
+	let now = Local::now();
+
+	let tasks = request_task_alerts().await?;
+	debug!("task_alerts: {} objects", tasks.len());
+	for task in tasks {
+		if task.todo_time <= now {
 			continue;
 		}
-		let diff = todo_time - now;
+		let diff = task.todo_time - now;
 		let minutes = diff.num_minutes();
-		if !is_reminder && (minutes == 7 * 24 * 60 || minutes == 48 * 60 || minutes == 24 * 60 || minutes == 60 || minutes == 10) {
-			notify_owner(&format_time(diff), task).await?;
-		} else if is_reminder && minutes == 0 {
-			notify_owner("⏰", task).await?;
+		if !task.is_reminder && (minutes == 7 * 24 * 60 || minutes == 48 * 60 || minutes == 24 * 60 || minutes == 60 || minutes == 10) {
+			notify_owner(&format_time(diff), task.task).await?;
+		} else if task.is_reminder && minutes == 0 {
+			notify_owner("⏰", task.task).await?;
 		}
 	}
 	Ok(())
@@ -392,6 +461,12 @@ struct Task {
 	r#type: String,
 	// utcDateCreated: DateTime<Utc>, // removed in 0.46
 	utcDateModified: DateTime<Utc>,
+}
+
+struct UsefulTask {
+	task: Task,
+	todo_time: DateTime<Local>,
+	is_reminder: bool
 }
 
 #[derive(Deserialize, Debug)]
