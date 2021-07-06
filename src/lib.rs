@@ -78,7 +78,7 @@ pub fn error<S: Into<String>>(msg: S) -> Error {
 }
 
 pub async fn send_message<S: Into<String>>(msg: S) -> Result<(), Error> {
-	API.send(SendMessage::new(*OWNER, msg.into())).await?;
+	API.send(SendMessage::new(*OWNER, msg.into()).parse_mode(ParseMode::MarkdownV2)).await?;
 	Ok(())
 }
 

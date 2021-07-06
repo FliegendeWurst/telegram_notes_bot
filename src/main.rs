@@ -69,7 +69,7 @@ async fn process_one(update: Update, context: &mut Context) -> Result<(), Error>
 		let now = Local::now();
 		println!("[{}-{:02}-{:02} {:02}:{:02}] Receiving msg {:?}", now.year(), now.month(), now.day(), now.hour(), now.minute(), message);
 		if message.from.id != *OWNER {
-			// don't handle message
+			println!("ignoring, not sent by authorized user");
 			return Ok(());
 		}
 
@@ -239,20 +239,33 @@ async fn command_next() -> Result<(), Error> {
 	all.sort_by_key(|x| x.time());
 	let mut printed = 0;
 	let now = Local::now();
-	let mut buf = String::new();
+	let mut buf = "```\n".to_owned();
 	for x in all {
 		let time = x.time();
 		if time < now {
 			continue;
 		}
-		buf += &format!("{} {}\n", time.format("%Y-%m-%d %H:%M").to_string(), x.description());
+		buf += &format!("{} {} {}\n", weekday_to_name(time.weekday()), time.format("%Y-%m-%d %H:%M").to_string(), x.description());
 		printed += 1;
 		if printed >= 10 {
 			break;
 		}
 	}
+	buf += "```\n";
 	send_message(buf).await?;
 	Ok(())
+}
+
+fn weekday_to_name(wd: Weekday) -> &'static str {
+	match wd {
+    	Weekday::Mon => "Mo",
+    	Weekday::Tue => "Di",
+    	Weekday::Wed => "Mi",
+    	Weekday::Thu => "Do",
+    	Weekday::Fri => "Fr",
+    	Weekday::Sat => "Sa",
+    	Weekday::Sun => "So",
+	}
 }
 
 enum EventOrTask {
