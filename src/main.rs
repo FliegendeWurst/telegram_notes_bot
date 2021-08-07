@@ -252,7 +252,7 @@ async fn command_next() -> Result<(), Error> {
 		}
 	}
 	buf += "```\n";
-	send_message(buf).await?;
+	send_message_markdown(buf).await?;
 	Ok(())
 }
 

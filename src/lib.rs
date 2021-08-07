@@ -78,6 +78,11 @@ pub fn error<S: Into<String>>(msg: S) -> Error {
 }
 
 pub async fn send_message<S: Into<String>>(msg: S) -> Result<(), Error> {
+	API.send(SendMessage::new(*OWNER, msg.into()).parse_mode(ParseMode::Html)).await?;
+	Ok(())
+}
+
+pub async fn send_message_markdown<S: Into<String>>(msg: S) -> Result<(), Error> {
 	API.send(SendMessage::new(*OWNER, msg.into()).parse_mode(ParseMode::MarkdownV2)).await?;
 	Ok(())
 }
