@@ -142,8 +142,8 @@ async fn process_one(update: Update, context: &mut Context) -> Result<(), Error>
 					if CLIENT.get(&trilium_url("/custom/new_event")).form(&json!({
 						"uid": calendar.events[0].uid,
 						"name": calendar.events[0].summary,
-						"summary": calendar.events[0].description,
-						"summaryHtml": calendar.events[0].description_html.as_deref().unwrap_or_default(),
+						"summary": calendar.events[0].description.replace("\\n", "\n"),
+						"summaryHtml": calendar.events[0].description_html.as_deref().map(|x| x.replace("\\n", "\n")).unwrap_or_default(),
 						"fileName": document.file_name,
 						"fileData": text,
 						"location": calendar.events[0].location,

@@ -32,9 +32,9 @@ const targetTemplate = await api.currentNote.getRelationValue('targetTemplate');
 const options = {
     "parentNoteId": dayNote.noteId,
     "title": name,
-    "content": summaryHtml != "" ? summaryHtml : summary,
+    "content": summaryHtml != "" ? summaryHtml : summary.replace(/\n/g, "<br>").replace(/\r/g, ""),
     "type": "text",
-    "mime": summaryHtml != "" ? "text/html" : "text/plain"
+    "mime": "text/html"
 };
 const resp = await api.createNewNote(options);
 const note = resp.note;
