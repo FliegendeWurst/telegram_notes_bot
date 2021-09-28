@@ -16,10 +16,12 @@ use telegram_notes_bot::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-	env_logger::init();
-	Lazy::force(&OWNER);
-	Lazy::force(&API);
-	Lazy::force(&TRILIUM_TOKEN);
+	task::spawn_blocking(|| {
+		env_logger::init();
+		Lazy::force(&OWNER);
+		Lazy::force(&API);
+		Lazy::force(&TRILIUM_TOKEN);
+	}).await.unwrap();
 	println!("Init done!");
 
 	task::spawn(task_alerts());
