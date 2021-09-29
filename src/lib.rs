@@ -27,7 +27,7 @@ pub static TRILIUM_HOST: Lazy<String> = Lazy::new(|| {
 });
 
 pub fn trilium_url(path: &str) -> String {
-	format!("http://{}{}", *TRILIUM_HOST, path)
+	format!("{}{}", *TRILIUM_HOST, path)
 }
 
 pub static TRILIUM_TOKEN: Lazy<String> = Lazy::new(|| {
