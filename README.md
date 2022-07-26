@@ -8,3 +8,5 @@ Set `TRILIUM_USER` and `TRILIUM_PASSWORD`.
 Set `TELEGRAM_USER_ID` to your own Telegram User ID.
 
 Then simply run the program: `cargo run --release`.
+
+Note: the bot is not using the new [ETAPI](https://github.com/zadam/trilium/wiki/ETAPI) (yet)
